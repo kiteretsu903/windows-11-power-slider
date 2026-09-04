@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Windows 11 Power Slider is a lightweight native C++ tray app for switching power modes with a modern Acrylic interface." />
+    <meta name="description" content="Windows 11 Power Slider puts the current power mode in the taskbar tray and opens a compact Acrylic switcher with one click." />
     <link rel="canonical" href="https://kiteretsu903.github.io/windows-11-power-slider/" />
     <link rel="icon" href="assets/icon.png" />
     <meta name="theme-color" content="#07101f" />
     <meta property="og:title" content="Windows 11 Power Slider" />
-    <meta property="og:description" content="Modern power mode controls without the WinUI 3 runtime." />
+    <meta property="og:description" content="Your current power mode, always visible in the taskbar tray." />
     <meta property="og:image" content="https://kiteretsu903.github.io/windows-11-power-slider/assets/preview.png" />
     <meta property="og:url" content="https://kiteretsu903.github.io/windows-11-power-slider/" />
     <meta property="og:type" content="website" />
@@ -30,6 +30,8 @@
       .brand img { width: 34px; height: 34px; border-radius: 10px; }
       nav { display: flex; gap: 28px; color: var(--muted); font-size: 14px; font-weight: 600; }
       nav a:hover, footer a:hover { color: var(--blue); }
+      .header-actions { display: flex; align-items: center; gap: 10px; }
+      .language { min-width: 54px; color: var(--muted); background: transparent; cursor: pointer; }
       .button { display: inline-flex; min-height: 44px; padding: 0 18px; align-items: center; justify-content: center; gap: 9px; border: 1px solid rgba(255,255,255,.27); border-radius: 999px; font-size: 14px; font-weight: 650; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
       .button:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.08); }
       .button-blue { color: #041322; border-color: #83cbff; background: linear-gradient(135deg,#83cbff,#46aaf3); box-shadow: 0 10px 30px rgba(37,146,231,.23); }
@@ -57,33 +59,12 @@
       .feature-number { color: var(--blue); font-size: 13px; font-weight: 720; letter-spacing: .1em; }
       .feature-row h3 { margin: 0; font-size: 25px; line-height: 1.08; letter-spacing: -.04em; }
       .feature-row p { max-width: 410px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
-      .native { padding: 0 0 104px; }
-      .native-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-      .native-copy,.facts { min-height: 470px; padding: 44px; border-radius: var(--radius); }
-      .native-copy { display: flex; flex-direction: column; justify-content: space-between; color: #07101f; background: linear-gradient(145deg,#dff2ff,#79c7ff); }
-      .native-copy .section-label { color: #075f9e; }
-      .native-copy h2 { font-size: clamp(43px,4.8vw,62px); }
-      .native-copy p:not(.section-label) { max-width: 410px; margin: 20px 0 0; color: #1b4d70; font-size: 17px; line-height: 1.55; }
-      .quiet { padding-top: 24px; border-top: 1px solid rgba(7,16,31,.23); color: #17476a; font-size: 13px; line-height: 1.45; }
-      .quiet strong { display: block; margin-bottom: 4px; color: #07101f; font-size: 12px; letter-spacing: .08em; }
-      .facts { background: rgba(255,255,255,.055); border: 1px solid var(--line); backdrop-filter: blur(18px); }
-      .facts ul { margin: 25px 0 0; padding: 0; list-style: none; }
-      .facts li { display: flex; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 15px; }
-      .facts li strong { color: var(--ink); font-weight: 650; }
-      .callout { padding: 40px 0 68px; }
-      .callout-inner { display: grid; grid-template-columns: 1fr auto; gap: 38px; align-items: center; padding: 55px 60px; border-radius: var(--radius); background: linear-gradient(125deg,#0878d1,#48b1fa); color: white; }
-      .callout-inner .section-label { color: #d9f0ff; }
-      .callout-inner h2 { margin-top: 11px; font-size: clamp(40px,5vw,61px); }
-      .callout-inner .button { margin-top: 25px; color: #07558e; border-color: white; background: white; }
-      .callout-inner img { width: 128px; height: 128px; border-radius: 28px; filter: drop-shadow(0 20px 25px rgba(2,45,83,.28)); }
       footer { display: flex; justify-content: space-between; gap: 24px; padding: 26px 0 39px; border-top: 1px solid var(--line); color: #8493a8; font-size: 13px; }
       @media (max-width: 780px) {
         nav { display: none; } .site-header { height: 72px; }
-        .hero { padding: 58px 0 76px; } .hero-grid,.section-head,.native-grid { grid-template-columns: 1fr; gap: 30px; } .hero-copy { padding-top: 0; }
+        .hero { padding: 58px 0 76px; } .hero-grid,.section-head { grid-template-columns: 1fr; gap: 30px; } .hero-copy { padding-top: 0; }
         .product-frame { margin-top: 43px; border-radius: 20px; }
-        .features { padding: 78px 0; } .native { padding-bottom: 78px; }
-        .native-copy,.facts { min-height: auto; padding: 35px; }
-        .callout-inner { grid-template-columns: 1fr; padding: 42px 35px; } .callout-inner img { width: 92px; height: 92px; }
+        .features { padding: 78px 0; }
       }
       @media (max-width: 520px) {
         .shell { width: min(100% - 32px,1180px); } .brand span { max-width: 190px; }
@@ -97,29 +78,48 @@
   <body>
     <header class="shell site-header">
       <a class="brand" href="#top" aria-label="Windows 11 Power Slider home"><img src="assets/icon.png" alt="" /><span>Windows 11 Power Slider</span></a>
-      <nav aria-label="Primary navigation"><a href="#features">Features</a><a href="#download">Download</a></nav>
-      <a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider">GitHub <span aria-hidden="true">↗</span></a>
+      <nav aria-label="Primary navigation"><a href="#features" data-i18n="featuresNav">Features</a><a href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest" data-i18n="downloadNav">Download</a></nav>
+      <div class="header-actions"><button class="button language" id="language-toggle" type="button" aria-label="切换到中文">中文</button><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider">GitHub <span aria-hidden="true">↗</span></a></div>
     </header>
     <main id="top">
       <section class="shell hero">
         <div class="hero-grid">
-          <div><p class="kicker">Power mode controls for Windows 11</p><h1>Power modes,<br />back where they<br /><em>belong.</em></h1></div>
-          <div class="hero-copy"><p>Switch plugged-in and battery power modes from one compact Acrylic flyout.</p><div class="hero-actions"><a class="button button-blue" href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest">Download v1.0 <span aria-hidden="true">↓</span></a><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider">View source <span aria-hidden="true">↗</span></a></div><p class="subline">Windows 11 x64 · Native C++ / Win32 · Free and open source</p></div>
+          <div><h1 data-i18n-html="headline">Power modes,<br />back where they<br /><em>belong.</em></h1></div>
+          <div class="hero-copy"><p data-i18n="intro">Its taskbar tray icon always shows the current mode. Click it to switch plugged-in and battery profiles.</p><div class="hero-actions"><a class="button button-blue" href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest"><span data-i18n="download">Download v1.0.1</span> <span aria-hidden="true">↓</span></a><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="source">View source</span> <span aria-hidden="true">↗</span></a></div><p class="subline" data-i18n="subline">Windows 11 x64 · Free and open source</p></div>
         </div>
         <figure class="product-frame"><img src="assets/preview.png" alt="Windows 11 Power Slider shown in dark and light modes" /></figure>
       </section>
 
       <section class="shell features" id="features">
-        <div class="section-head"><div><p class="section-label">One click from the tray</p><h2>The old slider idea,<br /><em>rebuilt for today.</em></h2></div><p class="section-lede">Separate controls for battery and plugged-in use.</p></div>
+        <div class="section-head"><div><h2 data-i18n-html="featureHeadline">Small, direct,<br /><em>familiar.</em></h2></div></div>
         <div class="feature-list">
-          <article class="feature-row"><span class="feature-number">01</span><h3>Separate AC and battery modes.</h3><p>Efficiency, Balanced or Performance for each power source.</p></article>
-          <article class="feature-row"><span class="feature-number">02</span><h3>Modern Windows appearance.</h3><p>Acrylic blur, light and dark themes, native motion and Fluent tray icons.</p></article>
-          <article class="feature-row"><span class="feature-number">03</span><h3>Keep Awake.</h3><p>Stay awake when needed, with automatic low-battery protection.</p></article>
+          <article class="feature-row"><span class="feature-number">01</span><h3 data-i18n="modeTitle">AC and battery modes.</h3><p data-i18n="modeBody">Efficiency, Balanced or Performance for each power source.</p></article>
+          <article class="feature-row"><span class="feature-number">02</span><h3 data-i18n="lookTitle">Modern Windows appearance.</h3><p data-i18n="lookBody">Acrylic blur, light and dark themes, smooth motion and Fluent tray icons.</p></article>
+          <article class="feature-row"><span class="feature-number">03</span><h3 data-i18n="awakeTitle">Keep Awake.</h3><p data-i18n="awakeBody">Stay awake when needed, with automatic low-battery protection.</p></article>
         </div>
       </section>
 
-      <section class="shell callout" id="download"><div class="callout-inner"><div><p class="section-label">Windows 11 Power Slider v1.0</p><h2>Modern outside.<br />Native underneath.</h2><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest">Download for Windows <span aria-hidden="true">↓</span></a></div><img src="assets/icon.png" alt="Windows 11 Power Slider icon" /></div></section>
     </main>
-    <footer class="shell"><span>© 2026 Windows 11 Power Slider · MIT License</span><span><a href="privacy.html">Privacy</a> · <a href="https://github.com/kiteretsu903/windows-11-power-slider">Source code on GitHub <span aria-hidden="true">↗</span></a></span></footer>
+    <footer class="shell"><span>© 2026 Windows 11 Power Slider · MIT License</span><span><a href="privacy.html" data-i18n="privacy">Privacy</a> · <a href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="sourceFooter">Source code on GitHub</span> <span aria-hidden="true">↗</span></a></span></footer>
+    <script>
+      (() => {
+        const copy = {
+          en: { featuresNav:'Features', downloadNav:'Download', headline:'Power modes,<br />back where they<br /><em>belong.</em>', intro:'Its taskbar tray icon always shows the current mode. Click it to switch plugged-in and battery profiles.', download:'Download v1.0.1', source:'View source', subline:'Windows 11 x64 · Free and open source', featureHeadline:'Small, direct,<br /><em>familiar.</em>', modeTitle:'AC and battery modes.', modeBody:'Efficiency, Balanced or Performance for each power source.', lookTitle:'Modern Windows appearance.', lookBody:'Acrylic blur, light and dark themes, smooth motion and Fluent tray icons.', awakeTitle:'Keep Awake.', awakeBody:'Stay awake when needed, with automatic low-battery protection.', privacy:'Privacy', sourceFooter:'Source code on GitHub' },
+          zh: { featuresNav:'功能', downloadNav:'下载', headline:'电源模式，<br />回到该在的<br /><em>位置。</em>', intro:'任务栏托盘图标始终显示当前模式。点击即可切换插电与电池配置。', download:'下载 v1.0.1', source:'查看源码', subline:'Windows 11 x64 · 免费开源', featureHeadline:'小巧、直接、<br /><em>顺手。</em>', modeTitle:'插电与电池模式。', modeBody:'每种供电状态均可选择最佳能效、平衡或最佳性能。', lookTitle:'现代 Windows 外观。', lookBody:'Acrylic 模糊、浅色与深色主题、流畅动画及 Fluent 托盘图标。', awakeTitle:'保持唤醒。', awakeBody:'需要时保持系统唤醒，并提供自动低电量保护。', privacy:'隐私', sourceFooter:'GitHub 源代码' }
+        };
+        const toggle = document.getElementById('language-toggle');
+        let language = localStorage.getItem('power-slider-language') || ((navigator.languages || [navigator.language]).some(value => /^zh(?:-|$)/i.test(value || '')) ? 'zh' : 'en');
+        const apply = value => {
+          language = value === 'zh' ? 'zh' : 'en';
+          document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+          document.querySelectorAll('[data-i18n]').forEach(node => node.textContent = copy[language][node.dataset.i18n]);
+          document.querySelectorAll('[data-i18n-html]').forEach(node => node.innerHTML = copy[language][node.dataset.i18nHtml]);
+          toggle.textContent = language === 'zh' ? 'EN' : '中文';
+          toggle.setAttribute('aria-label', language === 'zh' ? 'Switch to English' : '切换到中文');
+        };
+        toggle.addEventListener('click', () => { const next = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('power-slider-language', next); apply(next); });
+        apply(language);
+      })();
+    </script>
   </body>
 </html>

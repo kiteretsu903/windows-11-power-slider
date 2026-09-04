@@ -6,14 +6,14 @@ A lightweight **native C++ / Win32** power-mode tray app with a modern Acrylic i
 
 [Website](https://kiteretsu903.github.io/windows-11-power-slider/) · [Download](https://github.com/kiteretsu903/windows-11-power-slider/releases/latest)
 
-![Windows 11 Power Slider](docs/images/preview.png)
+![Windows 11 Power Slider with its taskbar tray icon](docs/images/preview.png)
 
 Inspired by [PowerModeSlider](https://github.com/giulioungaretti/PowerModeSlider), independently rebuilt with separate AC/battery controls and a conventional installer.
 
 ## Features
 
 - **Native and lightweight.** No .NET, WinUI 3, Qt or WebView runtime. Graphics resources are released when the panel closes.
-- **Modern appearance.** Acrylic blur, automatic light/dark themes, smooth flyout motion and DPI-aware tray icons showing the current mode.
+- **Modern appearance.** Acrylic blur that follows the Windows light/dark mode, smooth flyout motion and DPI-aware tray icons showing the current mode.
 - **Separate power controls.** Best power efficiency, Balanced and Best performance, with separate plugged-in and battery sliders.
 - **Keep Awake with battery protection.** Keep the system and screen awake. Low battery or a sleep transition turns it off, without automatically re-enabling it.
 - **Simple setup.** Portable EXE or per-user installer, automatic English/Chinese selection and optional startup with Windows. No certificate imports.

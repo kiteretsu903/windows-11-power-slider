@@ -1,5 +1,5 @@
 #define AppName "Windows 11 Power Slider"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define AppPublisher "Bozhen Peng"
 #define AppExeName "PowerModeNative.exe"
 

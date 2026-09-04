@@ -6,8 +6,28 @@ const sharp = require('sharp');
 const root = path.resolve(__dirname, '..');
 const appearance = fs.readFileSync(path.join(root,'src','appearance.h'),'utf8');
 const opacity = Number(appearance.match(/kBackgroundOpacity\s*=\s*([0-9.]+)f/)[1]);
-const asset = name => 'data:image/png;base64,' + fs.readFileSync(path.join(root,'assets',name+'-ui.png')).toString('base64');
+const data = buffer => 'data:image/png;base64,' + buffer.toString('base64');
+const asset = name => data(fs.readFileSync(path.join(root,'assets',name+'-ui.png')));
+async function darkTaskbar(source) {
+ const image=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+ for(let i=0;i<image.data.length;i+=4) {
+  const r=image.data[i],g=image.data[i+1],b=image.data[i+2];
+  const high=Math.max(r,g,b),low=Math.min(r,g,b),saturation=high?(high-low)/high:0,luma=(r+g+b)/765;
+  if(saturation<.14) {
+   const value=luma>.58?Math.round(25+(1-luma)*28):Math.round(246-luma*80);
+   image.data[i]=image.data[i+1]=image.data[i+2]=value;
+  }
+ }
+ return sharp(image.data,{raw:image.info}).png().toBuffer();
+}
 async function scene(light) {
+const traySource=path.join(root,'docs','images','windows11-taskbar.png');
+const trayCrop=await sharp(traySource).extract({left:985,top:0,width:393,height:98}).png().toBuffer();
+const trayBuffer=light
+ ? trayCrop
+ : await darkTaskbar(trayCrop);
+const modeIcon=fs.readFileSync(path.join(root,'assets','tray','balanced.svg'),'utf8')
+ .replaceAll('#212121',light?'#202124':'#f5f7fa');
 const wallpaper = 'data:image/png;base64,' + fs.readFileSync(path.join(root,'docs','images',light?'wallpaper-light.png':'wallpaper.png')).toString('base64');
 const background = `<image href="${wallpaper}" width="900" height="900" preserveAspectRatio="xMidYMid slice"/>`;
 const txt=(x,y,value,size=13,color='#24272d',anchor='start',weight=400)=>
@@ -26,6 +46,15 @@ const card=(top,name,icon,status,active,n,selected,labels)=>`
  <image href="${asset(icon)}" x="24" y="${top+11}" width="34" height="34"/>
  ${txt(62,top+31,name)}${txt(354,top+30,status,11,active?'#0066bf':'#666b74','end')}
  ${rail(top+62,n,selected,labels)}`;
+const taskbar=light=>{
+ const background=light?'#f1f1f1':'#181818';
+ return `<g>
+  <rect x="0" y="836" width="900" height="64" fill="${background}"/>
+  <path d="M0 836H900" stroke="${light?'#000':'#fff'}" stroke-opacity=".1"/>
+  <image href="${data(trayBuffer)}" x="643" y="836" width="257" height="64" preserveAspectRatio="none"/>
+  <image href="data:image/svg+xml;base64,${Buffer.from(modeIcon).toString('base64')}" x="615" y="856" width="22" height="22"/>
+ </g>`;
+};
 let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
 <defs>
  <filter id="blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="25"/></filter>
@@ -46,6 +75,7 @@ ${txt(62,335,'Keep awake')}
 <rect x="312" y="320" width="40" height="20" rx="10" fill="#ffffff" fill-opacity=".1" stroke="#6b7079"/>
 <circle cx="322" cy="330" r="6" fill="#6b7079"/>
 </g>
+${taskbar(light)}
 </svg>`;
 
 if(!light) svg=svg.replaceAll('#24272d','#f5f5f7').replaceAll('#20242a','#f5f5f7')

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(PowerModeNative VERSION 1.0.0 LANGUAGES CXX RC)
+project(PowerModeNative VERSION 1.0.1 LANGUAGES CXX RC)
 
 add_executable(PowerModeNative WIN32
     src/main.cpp

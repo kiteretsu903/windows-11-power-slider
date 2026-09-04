@@ -6,14 +6,14 @@
 
 轻量的**原生 C++ / Win32** 电源模式托盘工具，提供现代 Acrylic 界面与低常驻内存占用。
 
-![Windows 11 Power Slider](docs/images/preview.png)
+![Windows 11 Power Slider 及其任务栏托盘图标](docs/images/preview.png)
 
 灵感来自 [PowerModeSlider](https://github.com/giulioungaretti/PowerModeSlider)，以独立原生实现带来插电/电池独立控制和普通安装器。
 
 ## 功能
 
 - **原生轻量。** 无 .NET、WinUI 3、Qt 或 WebView 运行时依赖，关闭面板即释放图形资源。
-- **现代外观。** Acrylic 背景模糊、自动浅色/深色主题、平滑弹出动画，以及适配 DPI、反映当前档位的托盘图标。
+- **现代外观。** Acrylic 背景模糊并跟随 Windows 浅色/深色模式，配有平滑弹出动画，以及适配 DPI、反映当前档位的托盘图标。
 - **独立电源控制。** 插电与电池分别设置最佳能效、平衡、最佳性能三档。
 - **保持唤醒与电池保护。** 保持系统和屏幕唤醒；电量过低或系统睡眠时自动关闭，不会自动重新开启。
 - **简洁安装与设置。** 便携 EXE 或当前用户安装器，自动识别中英文，可选开机启动，无需导入证书。
