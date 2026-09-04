@@ -6,7 +6,7 @@
 
 轻量的**原生 C++ / Win32** 电源模式托盘工具，提供现代 Acrylic 界面与低常驻内存占用。
 
-![Windows 11 Power Slider 及其任务栏托盘图标](docs/images/preview.png)
+![Windows 11 Power Slider 及其任务栏托盘图标](docs/images/preview.zh-CN.png)
 
 灵感来自 [PowerModeSlider](https://github.com/giulioungaretti/PowerModeSlider)，以独立原生实现带来插电/电池独立控制和普通安装器。
 

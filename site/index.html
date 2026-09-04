@@ -9,9 +9,13 @@
     <meta name="theme-color" content="#07101f" />
     <meta property="og:title" content="Windows 11 Power Slider" />
     <meta property="og:description" content="Your current power mode, always visible in the taskbar tray." />
-    <meta property="og:image" content="https://kiteretsu903.github.io/windows-11-power-slider/assets/preview.png" />
+    <meta property="og:image" content="https://kiteretsu903.github.io/windows-11-power-slider/assets/preview.png?v=20260904b" />
+    <meta property="og:image:width" content="1800" />
+    <meta property="og:image:height" content="900" />
+    <meta property="og:image:alt" content="Windows 11 Power Slider in dark and light modes with its taskbar tray icon" />
     <meta property="og:url" content="https://kiteretsu903.github.io/windows-11-power-slider/" />
     <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>Windows 11 Power Slider</title>
     <style>
       :root {
@@ -33,17 +37,20 @@
       .header-actions { display: flex; align-items: center; gap: 10px; }
       .language { min-width: 54px; color: var(--muted); background: transparent; cursor: pointer; }
       .button { display: inline-flex; min-height: 44px; padding: 0 18px; align-items: center; justify-content: center; gap: 9px; border: 1px solid rgba(255,255,255,.27); border-radius: 999px; font-size: 14px; font-weight: 650; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
+      .button-icon { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .inline-icon { width: 14px; height: 14px; margin-left: 3px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .button:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.08); }
       .button-blue { color: #041322; border-color: #83cbff; background: linear-gradient(135deg,#83cbff,#46aaf3); box-shadow: 0 10px 30px rgba(37,146,231,.23); }
       .button-blue:hover { border-color: #a8dcff; background: linear-gradient(135deg,#9bd6ff,#55b7ff); }
       .hero { padding: 76px 0 104px; }
-      .hero-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 54px; align-items: start; }
+      .hero-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 54px; align-items: center; }
       .hero-grid > *, .section-head > * { min-width: 0; }
       .kicker, .section-label { margin: 0; color: var(--blue); font-size: 11px; font-weight: 760; letter-spacing: .14em; text-transform: uppercase; }
       h1,h2,h3,p { margin-top: 0; }
       h1 { max-width: 650px; margin: 18px 0 0; font-size: clamp(54px,6vw,76px); line-height: .92; letter-spacing: -.068em; font-weight: 710; }
+      html[lang="zh-CN"] h1 { font-size: clamp(34px,8.2vw,58px); line-height: 1.02; letter-spacing: -.055em; white-space: nowrap; }
       h1 em,h2 em { color: var(--blue); font-style: normal; }
-      .hero-copy { padding-top: 35px; }
+      .hero-copy { padding-top: 0; }
       .hero-copy > p { max-width: 510px; margin: 0; color: var(--muted); font-size: 19px; line-height: 1.5; letter-spacing: -.02em; }
       .hero-actions { display: flex; gap: 11px; flex-wrap: wrap; margin-top: 28px; }
       .subline { padding-top: 28px; color: #7f91a9; font-size: 13px; }
@@ -79,15 +86,15 @@
     <header class="shell site-header">
       <a class="brand" href="#top" aria-label="Windows 11 Power Slider home"><img src="assets/icon.png" alt="" /><span>Windows 11 Power Slider</span></a>
       <nav aria-label="Primary navigation"><a href="#features" data-i18n="featuresNav">Features</a><a href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest" data-i18n="downloadNav">Download</a></nav>
-      <div class="header-actions"><button class="button language" id="language-toggle" type="button" aria-label="切换到中文">中文</button><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider">GitHub <span aria-hidden="true">↗</span></a></div>
+      <div class="header-actions"><button class="button language" id="language-toggle" type="button" aria-label="切换到中文">中文</button><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider">GitHub <svg class="button-icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.5 4.5h8v8"/><path d="m15.5 4.5-11 11"/></svg></a></div>
     </header>
     <main id="top">
       <section class="shell hero">
         <div class="hero-grid">
           <div><h1 data-i18n-html="headline">Power modes,<br />back where they<br /><em>belong.</em></h1></div>
-          <div class="hero-copy"><p data-i18n="intro">Its taskbar tray icon always shows the current mode. Click it to switch plugged-in and battery profiles.</p><div class="hero-actions"><a class="button button-blue" href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest"><span data-i18n="download">Download v1.0.1</span> <span aria-hidden="true">↓</span></a><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="source">View source</span> <span aria-hidden="true">↗</span></a></div><p class="subline" data-i18n="subline">Windows 11 x64 · Free and open source</p></div>
+          <div class="hero-copy"><p data-i18n="intro">Its taskbar tray icon always shows the current mode. Click it to switch plugged-in and battery profiles.</p><div class="hero-actions"><a class="button button-blue" href="https://github.com/kiteretsu903/windows-11-power-slider/releases/latest"><span data-i18n="download">Download v1.0.1</span><svg class="button-icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M10 3.5v9"/><path d="m6.5 9 3.5 3.5L13.5 9"/><path d="M4 16h12"/></svg></a><a class="button" href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="source">View source</span><svg class="button-icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.5 4.5h8v8"/><path d="m15.5 4.5-11 11"/></svg></a></div><p class="subline" data-i18n="subline">Windows 11 x64 · Free and open source</p></div>
         </div>
-        <figure class="product-frame"><img src="assets/preview.png" alt="Windows 11 Power Slider shown in dark and light modes" /></figure>
+        <figure class="product-frame"><img id="product-preview" src="assets/preview.png?v=20260904b" alt="Windows 11 Power Slider shown in dark and light modes" /></figure>
       </section>
 
       <section class="shell features" id="features">
@@ -100,20 +107,23 @@
       </section>
 
     </main>
-    <footer class="shell"><span>© 2026 Windows 11 Power Slider · MIT License</span><span><a href="privacy.html" data-i18n="privacy">Privacy</a> · <a href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="sourceFooter">Source code on GitHub</span> <span aria-hidden="true">↗</span></a></span></footer>
+    <footer class="shell"><span>© 2026 Windows 11 Power Slider · MIT License</span><span><a href="privacy.html" data-i18n="privacy">Privacy</a> · <a href="https://github.com/kiteretsu903/windows-11-power-slider"><span data-i18n="sourceFooter">Source code on GitHub</span><svg class="inline-icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.5 4.5h8v8"/><path d="m15.5 4.5-11 11"/></svg></a></span></footer>
     <script>
       (() => {
         const copy = {
           en: { featuresNav:'Features', downloadNav:'Download', headline:'Power modes,<br />back where they<br /><em>belong.</em>', intro:'Its taskbar tray icon always shows the current mode. Click it to switch plugged-in and battery profiles.', download:'Download v1.0.1', source:'View source', subline:'Windows 11 x64 · Free and open source', featureHeadline:'Small, direct,<br /><em>familiar.</em>', modeTitle:'AC and battery modes.', modeBody:'Efficiency, Balanced or Performance for each power source.', lookTitle:'Modern Windows appearance.', lookBody:'Acrylic blur, light and dark themes, smooth motion and Fluent tray icons.', awakeTitle:'Keep Awake.', awakeBody:'Stay awake when needed, with automatic low-battery protection.', privacy:'Privacy', sourceFooter:'Source code on GitHub' },
-          zh: { featuresNav:'功能', downloadNav:'下载', headline:'电源模式，<br />回到该在的<br /><em>位置。</em>', intro:'任务栏托盘图标始终显示当前模式。点击即可切换插电与电池配置。', download:'下载 v1.0.1', source:'查看源码', subline:'Windows 11 x64 · 免费开源', featureHeadline:'小巧、直接、<br /><em>顺手。</em>', modeTitle:'插电与电池模式。', modeBody:'每种供电状态均可选择最佳能效、平衡或最佳性能。', lookTitle:'现代 Windows 外观。', lookBody:'Acrylic 模糊、浅色与深色主题、流畅动画及 Fluent 托盘图标。', awakeTitle:'保持唤醒。', awakeBody:'需要时保持系统唤醒，并提供自动低电量保护。', privacy:'隐私', sourceFooter:'GitHub 源代码' }
+          zh: { featuresNav:'功能', downloadNav:'下载', headline:'电源模式，<br /><em>回到该在的位置。</em>', intro:'任务栏托盘图标始终显示当前模式。点击即可切换插电与电池配置。', download:'下载 v1.0.1', source:'查看源码', subline:'Windows 11 x64 · 免费开源', featureHeadline:'小巧、直接、<br /><em>顺手。</em>', modeTitle:'插电与电池模式。', modeBody:'每种供电状态均可选择最佳能效、平衡或最佳性能。', lookTitle:'现代 Windows 外观。', lookBody:'Acrylic 模糊、浅色与深色主题、流畅动画及 Fluent 托盘图标。', awakeTitle:'保持唤醒。', awakeBody:'需要时保持系统唤醒，并提供自动低电量保护。', privacy:'隐私', sourceFooter:'GitHub 源代码' }
         };
         const toggle = document.getElementById('language-toggle');
+        const preview = document.getElementById('product-preview');
         let language = localStorage.getItem('power-slider-language') || ((navigator.languages || [navigator.language]).some(value => /^zh(?:-|$)/i.test(value || '')) ? 'zh' : 'en');
         const apply = value => {
           language = value === 'zh' ? 'zh' : 'en';
           document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
           document.querySelectorAll('[data-i18n]').forEach(node => node.textContent = copy[language][node.dataset.i18n]);
           document.querySelectorAll('[data-i18n-html]').forEach(node => node.innerHTML = copy[language][node.dataset.i18nHtml]);
+          preview.src = language === 'zh' ? 'assets/preview.zh-CN.png?v=20260904b' : 'assets/preview.png?v=20260904b';
+          preview.alt = language === 'zh' ? 'Windows 11 Power Slider 深色与浅色模式及其任务栏托盘图标' : 'Windows 11 Power Slider shown in dark and light modes with its taskbar tray icon';
           toggle.textContent = language === 'zh' ? 'EN' : '中文';
           toggle.setAttribute('aria-label', language === 'zh' ? 'Switch to English' : '切换到中文');
         };

@@ -20,7 +20,12 @@ async function darkTaskbar(source) {
  }
  return sharp(image.data,{raw:image.info}).png().toBuffer();
 }
-async function scene(light) {
+async function scene(light,chinese=false) {
+const copy=chinese?{
+ title:'电源模式',plugged:'插电',battery:'电池',balanced:'平衡',efficiency:'最佳能效',performance:'最佳性能',awake:'保持唤醒'
+}:{
+ title:'Power mode',plugged:'Plugged in',battery:'On battery',balanced:'Balanced',efficiency:'Efficiency',performance:'Performance',awake:'Keep awake'
+};
 const traySource=path.join(root,'docs','images','windows11-taskbar.png');
 const trayCrop=await sharp(traySource).extract({left:985,top:0,width:393,height:98}).png().toBuffer();
 const trayBuffer=light
@@ -65,13 +70,13 @@ ${background}
 <g clip-path="url(#panel)"><g filter="url(#blur)">${background}</g>
 <rect x="77.6" y="98.5" width="744.8" height="703" fill="#f2f2f2" fill-opacity="${opacity}"/></g>
 <rect x="77.6" y="98.5" width="744.8" height="703" rx="18" fill="none" stroke="#fff" stroke-opacity=".7"/>
-<g transform="translate(77.6 98.5) scale(1.9)" font-family="Segoe UI,Arial,sans-serif">
-${txt(24,35,'Power mode',16,'#20242a','start',600)}
-${card(58,'Plugged in','power','Balanced',true,3,1,['Efficiency','Balanced','Performance'])}
-${card(182,'On battery','battery','Efficiency',false,3,0,['Efficiency','Balanced','Performance'])}
+<g transform="translate(77.6 98.5) scale(1.9)" font-family="${chinese?'Microsoft YaHei UI,Microsoft YaHei,sans-serif':'Segoe UI,Arial,sans-serif'}">
+${txt(24,35,copy.title,16,'#20242a','start',600)}
+${card(58,copy.plugged,'power',copy.balanced,true,3,1,[copy.efficiency,copy.balanced,copy.performance])}
+${card(182,copy.battery,'battery',copy.efficiency,false,3,0,[copy.efficiency,copy.balanced,copy.performance])}
 <rect x="16" y="306" width="360" height="48" rx="8" fill="#fff" fill-opacity=".22"/>
 <image href="${asset('coffee')}" x="24" y="313" width="34" height="34"/>
-${txt(62,335,'Keep awake')}
+${txt(62,335,copy.awake)}
 <rect x="312" y="320" width="40" height="20" rx="10" fill="#ffffff" fill-opacity=".1" stroke="#6b7079"/>
 <circle cx="322" cy="330" r="6" fill="#6b7079"/>
 </g>
@@ -89,9 +94,18 @@ else svg=svg.replaceAll('fill="#536273" opacity=".40"','fill="#000" opacity=".30
 return sharp(Buffer.from(svg)).png().toBuffer();
 }
 (async()=>{
- const [dark,light]=await Promise.all([scene(false),scene(true)]);
- await sharp({create:{width:1800,height:900,channels:4,background:'#000'}})
- .composite([{input:dark,left:0,top:0},{input:light,left:900,top:0}])
- .png().toFile(path.join(root,'docs','images','preview.png'));
- console.log('Created preview.png: dark and light, 1800 x 900');
+ const [dark,light,darkZh,lightZh]=await Promise.all([scene(false),scene(true),scene(false,true),scene(true,true)]);
+ const render=async(name,left,right)=>{
+  const output=await sharp({create:{width:1800,height:900,channels:4,background:'#000'}})
+   .composite([{input:left,left:0,top:0},{input:right,left:900,top:0}]).png().toBuffer();
+  await Promise.all([
+   fs.promises.writeFile(path.join(root,'docs','images',name),output),
+   fs.promises.writeFile(path.join(root,'site','assets',name),output)
+  ]);
+ };
+ await Promise.all([
+  render('preview.png',dark,light),
+  render('preview.zh-CN.png',darkZh,lightZh)
+ ]);
+ console.log('Created English and Chinese previews: dark and light, 1800 x 900');
 })().catch(error=>{console.error(error);process.exitCode=1;});
