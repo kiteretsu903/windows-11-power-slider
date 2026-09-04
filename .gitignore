@@ -1,0 +1,8 @@
+/build/
+/dist/
+/toolchain/
+*.user
+*.suo
+*.VC.db
+*.opendb
+/.vs/
