@@ -16,7 +16,7 @@ Inspired by [PowerModeSlider](https://github.com/giulioungaretti/PowerModeSlider
 - **Modern appearance.** Acrylic blur that follows the Windows light/dark mode, smooth flyout motion and DPI-aware tray icons showing the current mode.
 - **Separate power controls.** Best power efficiency, Balanced and Best performance, with separate plugged-in and battery sliders.
 - **Keep Awake with battery protection.** Keep the system and screen awake. Low battery or a sleep transition turns it off, without automatically re-enabling it.
-- **Simple setup.** Portable EXE or per-user installer, automatic English/Chinese selection and optional startup with Windows. No certificate imports.
+- **Simple setup.** Portable EXE or per-user installer with a desktop shortcut, automatic English/Chinese selection and startup enabled by default. No certificate imports.
 
 ## Usage
 
@@ -24,7 +24,7 @@ Run `PowerModeNative.exe` or use the installer.
 
 - Click the tray icon to open or close the panel. Clicking outside also closes it.
 - Right-click for language, startup settings or Exit.
-- Startup is enabled on first launch and can be disabled from the tray menu.
+- Startup is enabled by default and can be disabled from the tray menu.
 
 ## Notes
 
@@ -46,4 +46,4 @@ Or build the portable EXE with LLVM-MinGW:
 .\build-portable.ps1 -Toolchain 'D:\Tools\llvm-mingw'
 ```
 
-[MIT License](LICENSE) · [Security](SECURITY.md) · [Icon credits](assets/fluent/SOURCE.md)
+[Changelog](CHANGELOG.md) · [MIT License](LICENSE) · [Security](SECURITY.md) · [Icon credits](assets/fluent/SOURCE.md)

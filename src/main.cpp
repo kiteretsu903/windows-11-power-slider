@@ -34,6 +34,7 @@ constexpr UINT kTrayMessage = WM_APP + 1;
 constexpr UINT kShowExistingMessage = WM_APP + 2;
 constexpr UINT kRestoreBackdropMessage = WM_APP + 3;
 constexpr UINT kMotionFrameMessage = WM_APP + 4;
+constexpr UINT kExitExistingMessage = WM_APP + 6;
 constexpr UINT_PTR kRefreshTimer = 1;
 constexpr UINT kCmdStartup = 1001;
 constexpr UINT kCmdExit = 1002;
@@ -124,7 +125,9 @@ public:
     int run(HINSTANCE instance, int show_command) {
         (void)show_command;
         preview_=wcsstr(GetCommandLineW(),L"--preview")!=nullptr;
+        const bool shutdown_requested = wcsstr(GetCommandLineW(), L"--shutdown") != nullptr;
         instance_ = instance;
+        SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         const HRESULT com_result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         const bool uninitialize_com = SUCCEEDED(com_result);
@@ -132,8 +135,14 @@ public:
         mutex_ = CreateMutexW(nullptr, FALSE, L"Local\\PowerModeNative.Singleton");
         if (mutex_ && GetLastError() == ERROR_ALREADY_EXISTS) {
             if (HWND existing = FindWindowW(kWindowClass, nullptr)) {
-                PostMessageW(existing, kShowExistingMessage, 0, 0);
+                PostMessageW(existing, shutdown_requested ? kExitExistingMessage : kShowExistingMessage, 0, 0);
             }
+            if (uninitialize_com) CoUninitialize();
+            return 0;
+        }
+        if (shutdown_requested) {
+            if (mutex_) CloseHandle(mutex_);
+            mutex_ = nullptr;
             if (uninitialize_com) CoUninitialize();
             return 0;
         }
@@ -311,6 +320,10 @@ private:
             show_flyout();
             return 0;
 
+        case kExitExistingMessage:
+            DestroyWindow(hwnd_);
+            return 0;
+
         case kRestoreBackdropMessage:
             trace_event("restore",visible_,acrylic_);
             if(visible_) apply_backdrop();
@@ -338,7 +351,10 @@ private:
             return TRUE;
 
         case WM_ENDSESSION:
-            if (w_param) clear_keep_awake();
+            if (w_param) {
+                clear_keep_awake();
+                DestroyWindow(hwnd_);
+            }
             return 0;
 
         case WM_CLOSE:
