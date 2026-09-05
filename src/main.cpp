@@ -20,6 +20,7 @@
 #include "renderer.h"
 #include "diagnostics.h"
 #include "tray_icon.h"
+#include "tray_registration.h"
 #include "tray_click.h"
 #include "awake_safety.h"
 #include "native_motion.h"
@@ -121,6 +122,7 @@ HICON make_tray_icon(int mode, bool awake) {
 }
 
 class App {
+    friend struct TrayIntegrationTest;
 public:
     int run(HINSTANCE instance, int show_command) {
         (void)show_command;
@@ -212,9 +214,7 @@ private:
 
     LRESULT handle_message(UINT message, WPARAM w_param, LPARAM l_param) {
         if (taskbar_created_message_ && message == taskbar_created_message_) {
-            tray_added_ = false;
-            create_tray_icon();
-            if (tray_added_) update_tray_icon();
+            update_tray_icon();
             return 0;
         }
         switch (message) {
@@ -266,12 +266,10 @@ private:
 
         case WM_TIMER:
             if (w_param == kRefreshTimer) {
-                if (!tray_added_) {
-                    create_tray_icon();
-                    if (tray_added_) update_tray_icon();
-                }
                 if(dragging_) guard_keep_awake();
                 else refresh_state(false);
+                if (tray_image_.pending()) update_tray_icon();
+                else sync_tray_icon();
             }
             return 0;
 
@@ -617,52 +615,51 @@ private:
     }
 
     void create_tray_icon() {
-        if (tray_icon_) DestroyIcon(tray_icon_);
-        tray_icon_ = nullptr;
         tray_ = {};
         tray_.cbSize = sizeof(tray_);
         tray_.hWnd = hwnd_;
         tray_.uID = 1;
         tray_.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
         tray_.uCallbackMessage = kTrayMessage;
-        tray_icon_ = make_tray_icon(2, false);
-        tray_.hIcon = tray_icon_;
-        StringCchCopyW(tray_.szTip, _countof(tray_.szTip), L"Windows 11 Power Slider");
-        tray_added_ = Shell_NotifyIconW(NIM_ADD, &tray_) != FALSE;
+        update_tray_icon();
         // Keep the legacy mouse callback protocol used by TrayClick.
         // Mixing button-up and version-4 selection events toggles twice.
     }
 
     void update_tray_icon() {
+        if (!tray_.hWnd) return; // Window creation may send theme messages early.
         int display_mode = energy_saver_active_ ? 0 :
             (supply_ == SupplyKind::Battery ? battery_position_ + 1 : ac_position_ + 1);
-        HICON next = make_tray_icon(display_mode, keep_awake_);
-        if (!next) return;
-        if (!tray_added_) {
-            DestroyIcon(next);
-            return;
-        }
-        HICON previous = tray_icon_;
-        tray_icon_ = next;
-        tray_.uFlags = NIF_ICON | NIF_TIP;
-        tray_.hIcon = tray_icon_;
+        tray_image_.update(make_tray_icon(display_mode, keep_awake_),[&]() {
+            HICON fallback=LoadIconW(instance_,MAKEINTRESOURCEW(101));
+            return fallback ? fallback : LoadIconW(nullptr,IDI_APPLICATION);
+        });
+        tray_.hIcon = tray_image_.get();
         const wchar_t* source = supply_ == SupplyKind::Battery ? (chinese()?L"电池":L"Battery") : (chinese()?L"插电":L"Plugged in");
         const wchar_t* zhModes[]{L"省电模式",L"最佳能效",L"平衡",L"最佳性能"};
         const wchar_t* enModes[]{L"Saver",L"Efficiency",L"Balanced",L"Performance"};
         StringCchPrintfW(tray_.szTip, _countof(tray_.szTip), L"Windows 11 Power Slider · %s · %s%s",
                          source,(chinese()?zhModes:enModes)[std::clamp(display_mode,0,3)],
                          keep_awake_ ? (chinese()?L" · 保持唤醒":L" · Keep awake") : L"");
-        if (!Shell_NotifyIconW(NIM_MODIFY, &tray_)) tray_added_ = false;
-        if (previous) DestroyIcon(previous);
+        sync_tray_icon();
+    }
+
+    void sync_tray_icon() {
+        const bool previous=tray_added_;
+        tray_added_=reconcile_tray_icon(tray_,Shell_NotifyIconW);
+        if (previous!=tray_added_ || !tray_added_)
+            trace_event("tray-registration",tray_added_,tray_.hIcon!=nullptr);
     }
 
     void show_balloon(const wchar_t* text, DWORD icon) {
+        sync_tray_icon();
         if (!tray_added_) return;
-        tray_.uFlags = NIF_INFO;
-        StringCchCopyW(tray_.szInfoTitle, _countof(tray_.szInfoTitle), kAppName);
-        StringCchCopyW(tray_.szInfo, _countof(tray_.szInfo), text);
-        tray_.dwInfoFlags = icon;
-        Shell_NotifyIconW(NIM_MODIFY, &tray_);
+        NOTIFYICONDATAW balloon=tray_;
+        balloon.uFlags = NIF_INFO;
+        StringCchCopyW(balloon.szInfoTitle, _countof(balloon.szInfoTitle), kAppName);
+        StringCchCopyW(balloon.szInfo, _countof(balloon.szInfo), text);
+        balloon.dwInfoFlags = icon;
+        if (!Shell_NotifyIconW(NIM_MODIFY, &balloon)) tray_added_=false;
     }
 
     void show_tray_menu() {
@@ -697,6 +694,8 @@ private:
 
     void show_flyout() {
         trace_event("show-start",visible_,acrylic_);
+        if (tray_image_.pending()) update_tray_icon();
+        else sync_tray_icon();
         if(visible_ && !closing_) { SetForegroundWindow(hwnd_); return; }
         cancel_motion();
         if(closing_) {
@@ -837,10 +836,10 @@ private:
         motion_.shutdown();
         clear_keep_awake();
         renderer_.discard_device_resources();
-        if (tray_added_) Shell_NotifyIconW(NIM_DELETE, &tray_);
+        if (tray_.hWnd) Shell_NotifyIconW(NIM_DELETE, &tray_);
         tray_added_ = false;
-        if (tray_icon_) DestroyIcon(tray_icon_);
-        tray_icon_ = nullptr;
+        tray_image_.reset();
+        tray_.hIcon=nullptr;
         if (mutex_) CloseHandle(mutex_);
         mutex_ = nullptr;
     }
@@ -859,7 +858,7 @@ private:
     HWND hwnd_{};
     HANDLE mutex_{};
     NOTIFYICONDATAW tray_{};
-    HICON tray_icon_{};
+    TrayImage tray_image_{};
     UINT taskbar_created_message_{};
     bool tray_added_{};
     TrayClick tray_click_{};

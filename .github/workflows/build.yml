@@ -23,6 +23,9 @@ jobs:
       - name: Stage portable app
         run: cmake --install build --config Release --prefix dist/app
 
+      - name: Test tray registration
+        run: ctest --test-dir build -C Release --output-on-failure
+
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
 
@@ -43,6 +46,6 @@ jobs:
           name: PowerModeNative-windows-x64
           path: |
             dist/app/PowerModeNative.exe
-            dist/PowerModeNative-Setup-*-x64.exe
+            dist/Windows11PowerSlider-Setup-*-x64.exe
             dist/SHA256SUMS.txt
           if-no-files-found: error
