@@ -127,6 +127,7 @@ public:
         preview_=wcsstr(GetCommandLineW(),L"--preview")!=nullptr;
         const bool shutdown_requested = wcsstr(GetCommandLineW(), L"--shutdown") != nullptr;
         instance_ = instance;
+        taskbar_created_message_ = RegisterWindowMessageW(L"TaskbarCreated");
         SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         const HRESULT com_result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -210,6 +211,12 @@ private:
     }
 
     LRESULT handle_message(UINT message, WPARAM w_param, LPARAM l_param) {
+        if (taskbar_created_message_ && message == taskbar_created_message_) {
+            tray_added_ = false;
+            create_tray_icon();
+            if (tray_added_) update_tray_icon();
+            return 0;
+        }
         switch (message) {
         case WM_CREATE:
             dpi_ = GetDpiForWindow(hwnd_);
@@ -259,6 +266,10 @@ private:
 
         case WM_TIMER:
             if (w_param == kRefreshTimer) {
+                if (!tray_added_) {
+                    create_tray_icon();
+                    if (tray_added_) update_tray_icon();
+                }
                 if(dragging_) guard_keep_awake();
                 else refresh_state(false);
             }
@@ -605,6 +616,8 @@ private:
     }
 
     void create_tray_icon() {
+        if (tray_icon_) DestroyIcon(tray_icon_);
+        tray_icon_ = nullptr;
         tray_ = {};
         tray_.cbSize = sizeof(tray_);
         tray_.hWnd = hwnd_;
@@ -614,7 +627,11 @@ private:
         tray_icon_ = make_tray_icon(2, false);
         tray_.hIcon = tray_icon_;
         StringCchCopyW(tray_.szTip, _countof(tray_.szTip), L"Windows 11 Power Slider");
-        Shell_NotifyIconW(NIM_ADD, &tray_);
+        tray_added_ = Shell_NotifyIconW(NIM_ADD, &tray_) != FALSE;
+        if (tray_added_) {
+            tray_.uVersion = NOTIFYICON_VERSION_4;
+            Shell_NotifyIconW(NIM_SETVERSION, &tray_);
+        }
     }
 
     void update_tray_icon() {
@@ -622,6 +639,10 @@ private:
             (supply_ == SupplyKind::Battery ? battery_position_ + 1 : ac_position_ + 1);
         HICON next = make_tray_icon(display_mode, keep_awake_);
         if (!next) return;
+        if (!tray_added_) {
+            DestroyIcon(next);
+            return;
+        }
         HICON previous = tray_icon_;
         tray_icon_ = next;
         tray_.uFlags = NIF_ICON | NIF_TIP;
@@ -632,11 +653,12 @@ private:
         StringCchPrintfW(tray_.szTip, _countof(tray_.szTip), L"Windows 11 Power Slider · %s · %s%s",
                          source,(chinese()?zhModes:enModes)[std::clamp(display_mode,0,3)],
                          keep_awake_ ? (chinese()?L" · 保持唤醒":L" · Keep awake") : L"");
-        Shell_NotifyIconW(NIM_MODIFY, &tray_);
+        if (!Shell_NotifyIconW(NIM_MODIFY, &tray_)) tray_added_ = false;
         if (previous) DestroyIcon(previous);
     }
 
     void show_balloon(const wchar_t* text, DWORD icon) {
+        if (!tray_added_) return;
         tray_.uFlags = NIF_INFO;
         StringCchCopyW(tray_.szInfoTitle, _countof(tray_.szInfoTitle), kAppName);
         StringCchCopyW(tray_.szInfo, _countof(tray_.szInfo), text);
@@ -816,7 +838,8 @@ private:
         motion_.shutdown();
         clear_keep_awake();
         renderer_.discard_device_resources();
-        Shell_NotifyIconW(NIM_DELETE, &tray_);
+        if (tray_added_) Shell_NotifyIconW(NIM_DELETE, &tray_);
+        tray_added_ = false;
         if (tray_icon_) DestroyIcon(tray_icon_);
         tray_icon_ = nullptr;
         if (mutex_) CloseHandle(mutex_);
@@ -838,6 +861,8 @@ private:
     HANDLE mutex_{};
     NOTIFYICONDATAW tray_{};
     HICON tray_icon_{};
+    UINT taskbar_created_message_{};
+    bool tray_added_{};
     TrayClick tray_click_{};
     UINT dpi_{96};
     bool light_theme_{};
