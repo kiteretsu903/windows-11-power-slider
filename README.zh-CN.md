@@ -1,3 +1,5 @@
+<img src="docs/images/app-icon.png" width="96" height="96" alt="Windows 11 Power Slider 应用图标" />
+
 # Windows 11 Power Slider
 
 [官方网站](https://kiteretsu903.github.io/windows-11-power-slider/) · [下载最新版](https://github.com/kiteretsu903/windows-11-power-slider/releases/latest)

@@ -154,6 +154,9 @@ public:
         window_class.lpfnWndProc = window_proc;
         window_class.hInstance = instance_;
         window_class.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+        window_class.hIcon = LoadIconW(instance_, MAKEINTRESOURCEW(101));
+        window_class.hIconSm = static_cast<HICON>(LoadImageW(instance_, MAKEINTRESOURCEW(101),
+            IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED));
         window_class.hbrBackground = nullptr;
         window_class.lpszClassName = kWindowClass;
         if (!RegisterClassExW(&window_class)) {

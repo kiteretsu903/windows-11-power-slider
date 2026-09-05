@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Privacy information for Windows 11 Power Slider." />
     <link rel="canonical" href="https://kiteretsu903.github.io/windows-11-power-slider/privacy.html" />
-    <link rel="icon" href="assets/icon.png" />
+    <link rel="icon" href="assets/icon.png?v=glass-dial-1" />
     <meta name="theme-color" content="#07101f" />
     <title>Privacy · Windows 11 Power Slider</title>
     <style>
       :root { --ink:#f4f8ff; --muted:#a8b4c6; --blue:#55b7ff; --night:#07101f; --line:rgba(255,255,255,.13); }
       * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:radial-gradient(circle at 78% 0,rgba(32,132,255,.25),transparent 29%),var(--night); font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif; } a { color:inherit; text-decoration:none; } .shell { width:min(820px,calc(100% - 48px)); margin:0 auto; }
-      header { height:82px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); } .brand { display:inline-flex; gap:11px; align-items:center; font-weight:700; } .brand img { width:34px; height:34px; border-radius:10px; } nav { display:flex; align-items:center; gap:16px; color:var(--muted); font-size:14px; } nav a:hover,main a,footer a:hover { color:var(--blue); } button { padding:8px 13px; color:var(--muted); border:1px solid var(--line); border-radius:999px; background:transparent; cursor:pointer; }
+      header { height:82px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); } .brand { display:inline-flex; gap:11px; align-items:center; font-weight:700; } .brand img { width:34px; height:34px; object-fit:contain; } nav { display:flex; align-items:center; gap:16px; color:var(--muted); font-size:14px; } nav a:hover,main a,footer a:hover { color:var(--blue); } button { padding:8px 13px; color:var(--muted); border:1px solid var(--line); border-radius:999px; background:transparent; cursor:pointer; }
       main { padding:90px 0 100px; } .eyebrow { margin:0; color:var(--blue); font-size:11px; font-weight:760; letter-spacing:.14em; text-transform:uppercase; } h1 { margin:15px 0 18px; font-size:clamp(52px,8vw,82px); line-height:.94; letter-spacing:-.07em; } .updated { margin:0 0 58px; color:var(--muted); font-size:14px; } section { padding:29px 0; border-top:1px solid var(--line); } h2 { margin:0 0 13px; font-size:23px; letter-spacing:-.035em; } p,li { color:var(--muted); font-size:16px; line-height:1.62; } p { margin:0; } ul { margin:0; padding-left:20px; } footer { display:flex; justify-content:space-between; padding:26px 0 39px; border-top:1px solid var(--line); color:#8493a8; font-size:13px; }
       @media(max-width:600px){.shell{width:min(100% - 32px,820px)} header nav{display:none} main{padding-top:62px} footer{flex-direction:column;gap:13px}}
     </style>
   </head>
   <body>
-    <header class="shell"><a class="brand" href="index.html"><img src="assets/icon.png" alt="" /><span>Windows 11 Power Slider</span></a><nav><a href="index.html" data-i18n="home">Home</a><button id="language-toggle" type="button" aria-label="切换到中文">中文</button></nav></header>
+    <header class="shell"><a class="brand" href="index.html"><img src="assets/icon.png?v=glass-dial-1" alt="" /><span>Windows 11 Power Slider</span></a><nav><a href="index.html" data-i18n="home">Home</a><button id="language-toggle" type="button" aria-label="切换到中文">中文</button></nav></header>
     <main class="shell"><p class="eyebrow" data-i18n="privacy">Privacy</p><h1 data-i18n="headline">Nothing leaves your PC.</h1><p class="updated" data-i18n="effective">Effective September 4, 2026</p>
       <section><h2 data-i18n="summaryTitle">Summary</h2><p data-i18n="summaryBody">Windows 11 Power Slider does not collect, transmit, sell or share personal data. It has no accounts, analytics, advertising or telemetry.</p></section>
       <section><h2 data-i18n="appTitle">The app</h2><ul><li data-i18n="appOne">Power modes and preferences are handled locally through Windows APIs and current-user settings.</li><li data-i18n="appTwo">The app has no network client, updater, cloud service, background service or driver.</li><li data-i18n="appThree">Keep Awake uses a process-scoped Windows request and is released when the app exits.</li></ul></section>
