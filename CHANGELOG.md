@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] - Unreleased
+## [1.0.2] - 2026-09-04
 
 - Enable Start with Windows by default while preserving an existing opt-out.
 - Run the app with the Windows High priority class.
@@ -23,6 +23,6 @@
 - Add Keep Awake with low-battery protection.
 - Add Acrylic presentation, native motion and mode-aware tray icons.
 
-[1.0.2]: https://github.com/kiteretsu903/windows-11-power-slider/compare/v1.0.1...HEAD
+[1.0.2]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.2
 [1.0.1]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.1
 [1.0.0]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.0
