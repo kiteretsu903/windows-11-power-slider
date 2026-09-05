@@ -318,11 +318,12 @@ private:
             return DefWindowProcW(hwnd_, message, w_param, l_param);
 
         case kTrayMessage:
-            if(l_param==WM_LBUTTONDOWN || l_param==WM_LBUTTONDBLCLK) {
+            if (const UINT tray_event = LOWORD(static_cast<DWORD_PTR>(l_param));
+                tray_event == WM_LBUTTONDOWN || tray_event == WM_LBUTTONDBLCLK) {
                 tray_click_.down(visible_,GetTickCount64());
-            } else if (l_param == WM_LBUTTONUP) {
+            } else if (tray_event == WM_LBUTTONUP || tray_event == NIN_SELECT || tray_event == NIN_KEYSELECT) {
                 tray_click_.up(visible_,GetTickCount64()) ? hide_flyout() : show_flyout();
-            } else if (l_param == WM_RBUTTONUP || l_param == WM_CONTEXTMENU) {
+            } else if (tray_event == WM_RBUTTONUP || tray_event == WM_CONTEXTMENU) {
                 show_tray_menu();
             }
             return 0;
