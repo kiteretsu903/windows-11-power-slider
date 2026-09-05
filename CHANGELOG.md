@@ -8,7 +8,7 @@
 - Repair startup and uninstall registration paths during upgrades.
 - Close the running tray process cleanly before an install, upgrade or uninstall.
 - Retry tray registration during sign-in and restore the icon after Explorer restarts.
-- Handle tray mouse and keyboard events correctly with the current notification protocol.
+- Preserve the original tray mouse protocol so each click toggles the panel only once.
 
 ## [1.0.1] - 2026-09-04
 

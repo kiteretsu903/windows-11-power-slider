@@ -321,7 +321,7 @@ private:
             if (const UINT tray_event = LOWORD(static_cast<DWORD_PTR>(l_param));
                 tray_event == WM_LBUTTONDOWN || tray_event == WM_LBUTTONDBLCLK) {
                 tray_click_.down(visible_,GetTickCount64());
-            } else if (tray_event == WM_LBUTTONUP || tray_event == NIN_SELECT || tray_event == NIN_KEYSELECT) {
+            } else if (tray_event == WM_LBUTTONUP) {
                 tray_click_.up(visible_,GetTickCount64()) ? hide_flyout() : show_flyout();
             } else if (tray_event == WM_RBUTTONUP || tray_event == WM_CONTEXTMENU) {
                 show_tray_menu();
@@ -629,10 +629,8 @@ private:
         tray_.hIcon = tray_icon_;
         StringCchCopyW(tray_.szTip, _countof(tray_.szTip), L"Windows 11 Power Slider");
         tray_added_ = Shell_NotifyIconW(NIM_ADD, &tray_) != FALSE;
-        if (tray_added_) {
-            tray_.uVersion = NOTIFYICON_VERSION_4;
-            Shell_NotifyIconW(NIM_SETVERSION, &tray_);
-        }
+        // Keep the legacy mouse callback protocol used by TrayClick.
+        // Mixing button-up and version-4 selection events toggles twice.
     }
 
     void update_tray_icon() {
