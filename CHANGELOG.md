@@ -2,6 +2,7 @@
 
 ## [1.0.3] - 2026-09-04
 
+- Add a blue glass application icon for the app, installer, website and READMEs while retaining mode-specific tray icons.
 - Preserve the last good tray image or use a resource fallback when icon creation fails; retry until the mode icon is available.
 - Reconcile tray registration on the existing refresh timer, including when Explorer loses the icon without a notification.
 - Handle repeated taskbar recreation notifications without getting stuck in a failed-registration state.
