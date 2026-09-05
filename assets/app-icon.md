@@ -16,6 +16,10 @@ Run `tools/prepare-assets.ps1` to regenerate the application outputs:
 - `site/assets/icon.png`: website brand and favicon.
 - `docs/images/app-icon.png`: English and Chinese README brand.
 
+The installer also copies the ICO to `PowerSlider-glass-dial-1.ico` for shortcuts
+and the uninstall entry. Change the design token in `AppIconName` when replacing
+the artwork so Explorer does not reuse an older cached icon.
+
 Approved design prompt: Three equal 120-degree pie-shaped glass sectors in a
 full circular automotive performance dial, with one needle pointing upward and
 right. Restrained blue Liquid Glass styling on a midnight navy rounded-square

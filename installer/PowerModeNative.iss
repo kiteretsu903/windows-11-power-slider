@@ -2,6 +2,7 @@
 #define AppVersion "1.0.3"
 #define AppPublisher "Bozhen Peng"
 #define AppExeName "PowerModeNative.exe"
+#define AppIconName "PowerSlider-glass-dial-1.ico"
 
 [Setup]
 AppId={{C6092D9F-9F26-4F4D-A882-D44D82E8C8D0}
@@ -27,10 +28,12 @@ SetupIconFile=..\src\PowerModeNative.ico
 CloseApplications=yes
 CloseApplicationsFilter={#AppExeName}
 RestartApplications=no
+; Notify Explorer to invalidate cached icons after replacing the executable.
+ChangesAssociations=yes
 CreateUninstallRegKey=yes
 Uninstallable=yes
 UninstallFilesDir={app}
-UninstallDisplayIcon={app}\{#AppExeName}
+UninstallDisplayIcon={app}\{#AppIconName}
 UninstallDisplayName={#AppName}
 VersionInfoVersion={#AppVersion}.0
 VersionInfoProductName={#AppName}
@@ -41,6 +44,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "..\dist\app\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\PowerModeNative.ico"; DestDir: "{app}"; DestName: "{#AppIconName}"; Flags: ignoreversion
 Source: "..\assets\fluent\LICENSE.txt"; DestDir: "{app}"; DestName: "Fluent-Icons-LICENSE.txt"; Flags: ignoreversion
 
 [InstallDelete]
@@ -50,8 +54,8 @@ Type: filesandordirs; Name: "{localappdata}\Programs\PowerModeNative"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppIconName}"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppIconName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "PowerModeNative"; ValueData: """{app}\{#AppExeName}"" --startup"; Flags: uninsdeletevalue; Check: ShouldRegisterStartup
