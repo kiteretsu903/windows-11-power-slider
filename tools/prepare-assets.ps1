@@ -22,16 +22,23 @@ foreach($name in 'power','battery','coffee') {
     $out.Save((Join-Path $root "assets\$name-ui.png"),[Drawing.Imaging.ImageFormat]::Png)
     $out.Dispose()
 }
-$source=[Drawing.Bitmap]::new((Join-Path $root 'assets\power-ui.png'))
+# The product icon is independent from the plugged-in card artwork.
+# Do not regenerate the launcher/installer icon from power-ui.png.
+$source=[Drawing.Bitmap]::new((Join-Path $root 'assets\app-icon.png'))
 $images=[Collections.Generic.List[byte[]]]::new()
 $sizes=@(16,20,24,32,40,48,64,128,256)
 foreach($size in $sizes) {
     $b=[Drawing.Bitmap]::new($size,$size,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g=[Drawing.Graphics]::FromImage($b);$g.InterpolationMode=[Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.CompositingMode=[Drawing.Drawing2D.CompositingMode]::SourceCopy
+    $g.PixelOffsetMode=[Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.DrawImage($source,0,0,$size,$size);$g.Dispose()
     $s=[IO.MemoryStream]::new();$b.Save($s,[Drawing.Imaging.ImageFormat]::Png)
     $images.Add($s.ToArray());$s.Dispose();$b.Dispose()
 }
+# Keep the website and README logo in sync with the 256px ICO frame.
+[IO.File]::WriteAllBytes((Join-Path $root 'site\assets\icon.png'),$images[$images.Count-1])
+[IO.File]::WriteAllBytes((Join-Path $root 'docs\images\app-icon.png'),$images[$images.Count-1])
 $source.Dispose()
 $w=[IO.BinaryWriter]::new([IO.File]::Create((Join-Path $root 'src\PowerModeNative.ico')))
 try {

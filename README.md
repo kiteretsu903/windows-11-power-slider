@@ -1,3 +1,5 @@
+<img src="docs/images/app-icon.png" width="96" height="96" alt="Windows 11 Power Slider icon" />
+
 # Windows 11 Power Slider
 
 English · [简体中文](README.zh-CN.md)
