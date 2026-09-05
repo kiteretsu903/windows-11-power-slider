@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
-project(PowerModeNative VERSION 1.0.3 LANGUAGES CXX RC)
+project(PowerModeNative VERSION 1.0.4 LANGUAGES CXX RC)
 
 add_executable(PowerModeNative WIN32
     src/main.cpp
     src/power_controller.cpp
     src/power_controller.h
     src/tray_registration.h
+    src/launch_options.h
+    src/version.h
     src/renderer.cpp
     src/renderer.h
     src/PowerModeNative.ico

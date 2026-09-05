@@ -1,9 +1,26 @@
 #include "tray_registration.h"
+#include "launch_options.h"
 #include <cassert>
 #include <cstdio>
 #include <vector>
 
 int main() {
+    const wchar_t* startup[]={L"PowerModeNative.exe",L"--startup"};
+    auto launch=LaunchOptions::parse(2,startup);
+    assert(launch.startup && !launch.show_existing() && !launch.show_new());
+    const wchar_t* manual[]={L"PowerModeNative.exe",L"--show"};
+    launch=LaunchOptions::parse(2,manual);
+    assert(launch.show_existing() && launch.show_new());
+    const wchar_t* quiet[]={L"PowerModeNative.exe",L"--startup",L"--show",L"--preview"};
+    launch=LaunchOptions::parse(4,quiet);
+    assert(!launch.show_existing() && !launch.show_new());
+    const wchar_t* path[]={L"C:\\--preview\\PowerModeNative.exe",L"--show-later"};
+    launch=LaunchOptions::parse(2,path);
+    assert(!launch.preview && !launch.show && launch.show_existing() && !launch.show_new());
+    const wchar_t* shutdown[]={L"PowerModeNative.exe",L"--shutdown",L"--show"};
+    launch=LaunchOptions::parse(3,shutdown);
+    assert(launch.shutdown && !launch.show_existing() && !launch.show_new());
+    std::puts("Launch routing: duplicate startup stays silent; explicit show, shutdown and exact flags passed.");
     NOTIFYICONDATAW data{};
     data.cbSize=sizeof(data);data.uID=1;data.uCallbackMessage=WM_APP+1;
     std::vector<DWORD> calls;

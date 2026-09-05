@@ -24,6 +24,12 @@ int main(int argc,char** argv) {
         CloseHandle(process);return exited?0:5;
     }
     if(std::strcmp(argv[2],"cycles")!=0) return 2;
+    // A synthetic WM_APP message does not carry a user's foreground grant.
+    // Model an explicit launcher/tray interaction rather than a background pop-up.
+    if(!AllowSetForegroundWindow(expected)) {
+        std::printf("Cannot grant foreground permission for interactive test: %lu\n",GetLastError());
+        return 18;
+    }
     for(int i=0;i<3;++i) {
         if(!send(WM_CLOSE)) return 6;
         Sleep(400);

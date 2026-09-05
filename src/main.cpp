@@ -18,12 +18,13 @@
 
 #include "power_controller.h"
 #include "renderer.h"
-#include "diagnostics.h"
 #include "tray_icon.h"
 #include "tray_registration.h"
 #include "tray_click.h"
 #include "awake_safety.h"
 #include "native_motion.h"
+#include "launch_options.h"
+#include "version.h"
 
 namespace {
 constexpr wchar_t kWindowClass[] = L"PowerModeNative.Flyout";
@@ -37,8 +38,10 @@ constexpr UINT kRestoreBackdropMessage = WM_APP + 3;
 constexpr UINT kMotionFrameMessage = WM_APP + 4;
 constexpr UINT kExitExistingMessage = WM_APP + 6;
 constexpr UINT_PTR kRefreshTimer = 1;
+constexpr UINT_PTR kFocusTimer = 2;
 constexpr UINT kCmdStartup = 1001;
 constexpr UINT kCmdExit = 1002;
+constexpr UINT kCmdVersion = 1006;
 
 constexpr int kLogicalWidth = 392;
 constexpr int kLogicalHeight = 370;
@@ -126,27 +129,37 @@ class App {
 public:
     int run(HINSTANCE instance, int show_command) {
         (void)show_command;
-        preview_=wcsstr(GetCommandLineW(),L"--preview")!=nullptr;
-        const bool shutdown_requested = wcsstr(GetCommandLineW(), L"--shutdown") != nullptr;
+        int argument_count=0;
+        LPWSTR* arguments=CommandLineToArgvW(GetCommandLineW(),&argument_count);
+        const LaunchOptions launch=arguments?LaunchOptions::parse(argument_count,arguments):LaunchOptions{};
+        if(arguments) LocalFree(arguments);
+        preview_=launch.preview && !launch.startup;
+        const bool shutdown_requested=launch.shutdown;
         instance_ = instance;
         taskbar_created_message_ = RegisterWindowMessageW(L"TaskbarCreated");
         SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-        const HRESULT com_result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-        const bool uninitialize_com = SUCCEEDED(com_result);
-
         mutex_ = CreateMutexW(nullptr, FALSE, L"Local\\PowerModeNative.Singleton");
         if (mutex_ && GetLastError() == ERROR_ALREADY_EXISTS) {
-            if (HWND existing = FindWindowW(kWindowClass, nullptr)) {
-                PostMessageW(existing, shutdown_requested ? kExitExistingMessage : kShowExistingMessage, 0, 0);
+            if (shutdown_requested || launch.show_existing()) {
+                HWND existing=nullptr;
+                // A second launch can arrive before the first creates its HWND.
+                for(int attempt=0;attempt<40 && !existing;++attempt) {
+                    existing=FindWindowW(kWindowClass,nullptr);
+                    if(!existing) Sleep(50);
+                }
+                if(existing) {
+                    DWORD owner=0;GetWindowThreadProcessId(existing,&owner);
+                    if(!shutdown_requested && owner) AllowSetForegroundWindow(owner);
+                    PostMessageW(existing,shutdown_requested?kExitExistingMessage:kShowExistingMessage,0,0);
+                }
             }
-            if (uninitialize_com) CoUninitialize();
+            CloseHandle(mutex_);mutex_=nullptr;
             return 0;
         }
         if (shutdown_requested) {
             if (mutex_) CloseHandle(mutex_);
             mutex_ = nullptr;
-            if (uninitialize_com) CoUninitialize();
             return 0;
         }
 
@@ -162,7 +175,7 @@ public:
         window_class.hbrBackground = nullptr;
         window_class.lpszClassName = kWindowClass;
         if (!RegisterClassExW(&window_class)) {
-            if (uninitialize_com) CoUninitialize();
+            if(mutex_) CloseHandle(mutex_);mutex_=nullptr;
             return 1;
         }
 
@@ -171,11 +184,13 @@ public:
                                 CW_USEDEFAULT, CW_USEDEFAULT, kLogicalWidth, kLogicalHeight,
                                 nullptr, nullptr, instance_, this);
         if (!hwnd_) {
-            if (uninitialize_com) CoUninitialize();
+            if(mutex_) CloseHandle(mutex_);mutex_=nullptr;
             return 2;
         }
 
         create_tray_icon();
+        const HRESULT com_result=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);
+        const bool uninitialize_com=SUCCEEDED(com_result);
         // Repair the stored path after moving from portable to installed build,
         // but preserve a user's explicit choice to disable startup.
         if(startup_enabled()) set_startup_enabled(true);
@@ -188,10 +203,8 @@ public:
             }
         }
         SetTimer(hwnd_, kRefreshTimer, 1500, nullptr);
-        refresh_state(true);
-        if (preview_ || wcsstr(GetCommandLineW(), L"--show")) {
-            show_flyout();
-        }
+        // Register the icon and enter the pump before contacting power services.
+        if(launch.show_new()) PostMessageW(hwnd_,kShowExistingMessage,0,0);
 
         MSG message{};
         while (GetMessageW(&message, nullptr, 0, 0) > 0) {
@@ -227,7 +240,6 @@ private:
               RegGetValueW(HKEY_CURRENT_USER,kPreferences,L"Language",RRF_RT_REG_DWORD,nullptr,&language_,&bytes);
               if(language_>2) language_=0; }
             light_theme_ = use_light_theme();
-            apply_backdrop();
             renderer_.initialize(hwnd_, dpi_);
             return 0;
 
@@ -253,7 +265,7 @@ private:
         case WM_THEMECHANGED:
             light_theme_ = use_light_theme();
             update_tray_icon();
-            apply_backdrop();
+            if(visible_) apply_backdrop();
             InvalidateRect(hwnd_, nullptr, TRUE);
             return 0;
 
@@ -269,11 +281,11 @@ private:
 
         case WM_TIMER:
             if (w_param == kRefreshTimer) {
-                if(dragging_) guard_keep_awake();
-                else refresh_state(false);
                 if (tray_image_.pending()) update_tray_icon();
                 else sync_tray_icon();
-            }
+                if(dragging_) guard_keep_awake();
+                else refresh_state(false);
+            } else if(w_param==kFocusTimer) check_foreground();
             return 0;
 
         case WM_PAINT:
@@ -302,6 +314,11 @@ private:
             on_left_button_up(GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param));
             return 0;
 
+        case WM_CANCELMODE:
+        case WM_CAPTURECHANGED:
+            cancel_drag();
+            return 0;
+
         case WM_KEYDOWN:
             if (w_param == VK_ESCAPE) hide_flyout();
             if (w_param == VK_APPS) show_tray_menu();
@@ -310,7 +327,6 @@ private:
             show_tray_menu(); return 0;
 
         case WM_ACTIVATE:
-            trace_event("activate",w_param,visible_);
             if (LOWORD(w_param) == WA_INACTIVE && visible_ && !menu_open_ && !preview_) {
                 if((GetAsyncKeyState(VK_LBUTTON)&0x8000) && pointer_on_tray_icon())
                     tray_click_.focus_lost_on_icon(GetTickCount64());
@@ -338,7 +354,6 @@ private:
             return 0;
 
         case kRestoreBackdropMessage:
-            trace_event("restore",visible_,acrylic_);
             if(visible_) apply_backdrop();
             return 0;
 
@@ -535,7 +550,7 @@ private:
         const bool light=use_light_theme();
         if(light!=light_theme_) {
             light_theme_=light;
-            apply_backdrop();
+            if(visible_) apply_backdrop();
             force_repaint=true;
         }
         const int previous_ac = ac_position_;
@@ -587,7 +602,6 @@ private:
         AccentPolicy policy{enabled?4:0,0,light_theme_?0x01F2F2F2u:0x011F1F1Fu,0};
         CompositionData data{19,&policy,sizeof(policy)};
         acrylic_=set && set(hwnd_,&data) && enabled;
-        trace_event("accent",acrylic_,enabled);
     }
 
     void paint() {
@@ -648,10 +662,7 @@ private:
     }
 
     void sync_tray_icon() {
-        const bool previous=tray_added_;
         tray_added_=reconcile_tray_icon(tray_,Shell_NotifyIconW);
-        if (previous!=tray_added_ || !tray_added_)
-            trace_event("tray-registration",tray_added_,tray_.hIcon!=nullptr);
     }
 
     void show_balloon(const wchar_t* text, DWORD icon) {
@@ -665,9 +676,11 @@ private:
         if (!Shell_NotifyIconW(NIM_MODIFY, &balloon)) tray_added_=false;
     }
 
-    void show_tray_menu() {
-        menu_open_ = true;
+    HMENU create_tray_menu() {
         HMENU menu = CreatePopupMenu();
+        if(!menu) return nullptr;
+        AppendMenuW(menu,MF_STRING|MF_GRAYED,kCmdVersion,L"Windows 11 Power Slider " POWER_SLIDER_VERSION_W);
+        AppendMenuW(menu,MF_SEPARATOR,0,nullptr);
         AppendMenuW(menu, MF_STRING | (startup_enabled() ? MF_CHECKED : MF_UNCHECKED),
                     kCmdStartup, chinese()?L"开机启动":L"Start with Windows");
         HMENU languages=CreatePopupMenu();
@@ -677,14 +690,47 @@ private:
         AppendMenuW(menu,MF_POPUP,reinterpret_cast<UINT_PTR>(languages),chinese()?L"语言":L"Language");
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(menu, MF_STRING, kCmdExit, chinese()?L"退出":L"Exit");
+        return menu;
+    }
+
+    void show_tray_menu() {
+        HMENU menu=create_tray_menu();
+        if(!menu) return;
+        menu_open_ = true;
         POINT point{};
         GetCursorPos(&point);
         SetForegroundWindow(hwnd_);
-        TrackPopupMenu(menu, TPM_RIGHTBUTTON | TPM_BOTTOMALIGN | TPM_LEFTALIGN,
-                       point.x, point.y, 0, hwnd_, nullptr);
+        const UINT command=TrackPopupMenu(menu, TPM_RIGHTBUTTON | TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD | TPM_NONOTIFY,
+                                          point.x, point.y, 0, hwnd_, nullptr);
         DestroyMenu(menu);
         PostMessageW(hwnd_, WM_NULL, 0, 0);
         menu_open_ = false;
+        check_foreground(true); // WM_ACTIVATE may have arrived inside the menu loop.
+        if(command) PostMessageW(hwnd_,WM_COMMAND,command,0);
+    }
+
+    void cancel_drag() noexcept {
+        dragging_=false;
+        if(GetCapture()==hwnd_) ReleaseCapture();
+    }
+
+    void check_foreground(bool immediate=false) {
+        if(!visible_ || closing_ || menu_open_ || preview_) return;
+        const HWND foreground=GetForegroundWindow();
+        if(!foreground || foreground==hwnd_ || GetAncestor(foreground,GA_ROOTOWNER)==hwnd_) return;
+        // SetForegroundWindow may be denied or complete asynchronously. Never
+        // leave a topmost, never-activated panel stranded over another app.
+        if(!immediate && GetTickCount64()<activation_grace_until_) return;
+        if((GetAsyncKeyState(VK_LBUTTON)&0x8000) && pointer_on_tray_icon())
+            tray_click_.focus_lost_on_icon(GetTickCount64());
+        hide_flyout();
+    }
+
+    void activate_flyout() {
+        activation_grace_until_=GetTickCount64()+300;
+        const BOOL activated=SetForegroundWindow(hwnd_);
+        if(activated) SetFocus(hwnd_);
+        if(!preview_) SetTimer(hwnd_,kFocusTimer,100,nullptr);
     }
 
     bool pointer_on_tray_icon() const noexcept {
@@ -696,16 +742,14 @@ private:
     }
 
     void show_flyout() {
-        trace_event("show-start",visible_,acrylic_);
         if (tray_image_.pending()) update_tray_icon();
         else sync_tray_icon();
-        if(visible_ && !closing_) { SetForegroundWindow(hwnd_); return; }
+        if(visible_ && !closing_) { activate_flyout(); return; }
         cancel_motion();
         if(closing_) {
             RECT from{};GetWindowRect(hwnd_,&from);
             closing_=false;
-            SetForegroundWindow(hwnd_);
-            SetFocus(hwnd_);
+            activate_flyout();
             if(animations_enabled()) start_motion(from.top,resting_y_,false);
             else SetWindowPos(hwnd_,nullptr,resting_x_,resting_y_,0,0,
                 SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
@@ -754,11 +798,10 @@ private:
             return;
         }
         DwmFlush();
-        trace_event("show-ready",acrylic_);
         visible_ = true;
+        activation_grace_until_=GetTickCount64()+300;
         SetWindowPos(hwnd_, HWND_TOPMOST, x, initial_y, width, height, SWP_SHOWWINDOW);
-        SetForegroundWindow(hwnd_);
-        SetFocus(hwnd_);
+        activate_flyout();
         // Keep the proven window-level Acrylic activation refresh, now after
         // the full content already exists, not via a delayed empty first paint.
         apply_backdrop();
@@ -768,6 +811,7 @@ private:
 
     void hide_flyout() {
         if(!visible_ || closing_) return;
+        cancel_drag();
         if(animations_enabled()) {
             RECT rect{};GetWindowRect(hwnd_,&rect);
             start_motion(rect.top,resting_y_+scale(32),true);
@@ -784,7 +828,6 @@ private:
         cancel_motion();
         closing_=closing;motion_to_=to;
         const bool scheduled=motion_.start(from,to,closing);
-        trace_event("motion-scheduled",scheduled,closing);
         motion_active_=scheduled;
         if(!scheduled || !PostMessageW(hwnd_,kMotionFrameMessage,motion_generation_,0)) {
             motion_active_=false;
@@ -798,10 +841,8 @@ private:
         int y=motion_to_;bool finished=false;
         if(!motion_.sample(y,finished)) finished=true;
         SetWindowPos(hwnd_,nullptr,resting_x_,y,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
-        trace_event("motion-frame",y,finished);
         if(finished) {
             cancel_motion();
-            trace_event("motion-end",closing_,y);
             if(closing_) finish_hide();
         } else {
             // Pace HWND movement against monitor vblank, not WM_TIMER. There is
@@ -825,8 +866,8 @@ private:
     void finish_hide() {
         cancel_motion();
         closing_=false;
-        trace_event("hide",visible_,acrylic_);
         visible_ = false;
+        KillTimer(hwnd_,kFocusTimer);
         restore_backdrop_pending_=false;
         ShowWindow(hwnd_, SW_HIDE);
         renderer_.discard_device_resources();
@@ -835,6 +876,7 @@ private:
 
     void cleanup() {
         KillTimer(hwnd_, kRefreshTimer);
+        KillTimer(hwnd_,kFocusTimer);
         cancel_motion();
         motion_.shutdown();
         clear_keep_awake();
@@ -877,6 +919,7 @@ private:
     bool restore_backdrop_pending_{};
     bool preview_{};
     bool menu_open_{};
+    ULONGLONG activation_grace_until_{};
     bool keep_awake_{};
     bool awake_release_pending_{};
     bool awake_warning_shown_{};

@@ -1,0 +1,4 @@
+#pragma once
+#define POWER_SLIDER_VERSION "1.0.4"
+#define POWER_SLIDER_VERSION_W L"1.0.4"
+#define POWER_SLIDER_VERSION_NUM 1,0,4,0

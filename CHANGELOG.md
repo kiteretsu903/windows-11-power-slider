@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.4] - 2026-09-04
+
+- Keep repeated startup and post-install launches silent; distinguish explicit shortcut activation.
+- Dismiss the flyout when activation is denied or focus is lost while a tray menu is open, and cancel interrupted slider drags.
+- Register the tray before font and backdrop initialization, and defer those components until the flyout is requested.
+- Remove startup and diagnostic trace logging from the release build.
+- Show the application version in the tray context menu.
+
 ## [1.0.3] - 2026-09-04
 
 - Add a circular blue glass application icon for the app, installer, website and READMEs while retaining mode-specific tray icons.
@@ -33,6 +41,7 @@
 - Add Keep Awake with low-battery protection.
 - Add Acrylic presentation, native motion and mode-aware tray icons.
 
+[1.0.4]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.4
 [1.0.3]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.3
 [1.0.2]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.2
 [1.0.1]: https://github.com/kiteretsu903/windows-11-power-slider/releases/tag/v1.0.1

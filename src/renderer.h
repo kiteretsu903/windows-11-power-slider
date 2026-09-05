@@ -29,6 +29,7 @@ public:
     Renderer& operator=(const Renderer&) = delete;
 
     bool initialize(HWND window, UINT dpi) noexcept;
+    bool factories_ready() const noexcept { return d2d_factory_ && dwrite_factory_ && title_format_ && body_format_ && small_format_ && label_format_; }
     void resize(UINT width, UINT height, UINT dpi) noexcept;
     void discard_device_resources() noexcept;
     bool draw(const RenderState& state) noexcept;
@@ -37,7 +38,8 @@ public:
 
 private:
     bool create_device_resources() noexcept;
-    void create_text_formats() noexcept;
+    bool ensure_factories() noexcept;
+    bool create_text_formats() noexcept;
     void draw_asset(int index,float x,float y) noexcept;
     ID2D1Bitmap* icons_[3]{};
     void set_color(const D2D1_COLOR_F& color) noexcept;

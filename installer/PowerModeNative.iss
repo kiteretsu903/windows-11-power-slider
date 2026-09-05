@@ -1,5 +1,5 @@
 #define AppName "Windows 11 Power Slider"
-#define AppVersion "1.0.3"
+#define AppVersion "1.0.4"
 #define AppPublisher "Bozhen Peng"
 #define AppExeName "PowerModeNative.exe"
 #define AppIconName "PowerSlider-glass-dial-3.ico"
@@ -54,8 +54,8 @@ Type: filesandordirs; Name: "{localappdata}\Programs\PowerModeNative"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppIconName}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppIconName}"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Parameters: "--show"; IconFilename: "{app}\{#AppIconName}"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Parameters: "--show"; IconFilename: "{app}\{#AppIconName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "PowerModeNative"; ValueData: """{app}\{#AppExeName}"" --startup"; Flags: uninsdeletevalue; Check: ShouldRegisterStartup
@@ -64,7 +64,7 @@ Root: HKCU; Subkey: "Software\PowerModeNative"; ValueType: none; ValueName: "Lan
 Root: HKCU; Subkey: "Software\PowerModeNative"; ValueType: dword; ValueName: "StartupInitialized"; ValueData: "1"; Flags: uninsdeletevalue; Check: ShouldRegisterStartup
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Parameters: "--startup"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{app}\{#AppExeName}"; Parameters: "--shutdown"; Flags: runhidden waituntilterminated; RunOnceId: "StopPowerSlider"

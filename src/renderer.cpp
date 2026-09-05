@@ -1,6 +1,5 @@
 #include "renderer.h"
 #include "appearance.h"
-#include "diagnostics.h"
 #include <algorithm>
 #include <cmath>
 #include <wincodec.h>
@@ -17,13 +16,18 @@ Renderer::~Renderer() {
 }
 bool Renderer::initialize(HWND window,UINT dpi) noexcept {
     window_=window; dpi_=dpi;
+    return window_!=nullptr; // Binding must not contact the font/GPU services.
+}
+bool Renderer::ensure_factories() noexcept {
+    if(factories_ready()) return true;
+    release(title_format_);release(body_format_);release(small_format_);release(label_format_);
+    release(dwrite_factory_);release(d2d_factory_);
     if(FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,&d2d_factory_))) return false;
     if(FAILED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),
                                  reinterpret_cast<IUnknown**>(&dwrite_factory_)))) return false;
-    create_text_formats();
-    return true; // Allocate composition resources only while the flyout is open.
+    return create_text_formats();
 }
-void Renderer::create_text_formats() noexcept {
+bool Renderer::create_text_formats() noexcept {
     // Explicit Chinese font avoids the heavy display-font fallback of the old UI.
     auto make=[&](float size,DWRITE_FONT_WEIGHT weight,IDWriteTextFormat** out) {
         dwrite_factory_->CreateTextFormat(L"Microsoft YaHei UI",nullptr,weight,
@@ -35,10 +39,11 @@ void Renderer::create_text_formats() noexcept {
     make(13,DWRITE_FONT_WEIGHT_NORMAL,&body_format_);
     make(11,DWRITE_FONT_WEIGHT_NORMAL,&small_format_);
     make(10,DWRITE_FONT_WEIGHT_NORMAL,&label_format_);
+    return factories_ready();
 }
 bool Renderer::create_device_resources() noexcept {
     if(target_) return true;
-    if(!d2d_factory_ || !window_) return false;
+    if(!window_ || !ensure_factories()) return false;
     IDXGIDevice* dxgi=nullptr; IDXGIAdapter* adapter=nullptr; IDXGIFactory2* factory=nullptr;
     IDXGISurface* surface=nullptr; ID2D1Bitmap1* bitmap=nullptr;
     HRESULT hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,
@@ -90,7 +95,6 @@ bool Renderer::create_device_resources() noexcept {
     if(SUCCEEDED(hr)) hr=target_->CreateSolidColorBrush(rgba(1,1,1),&brush_);
     release(bitmap); release(surface); release(factory); release(adapter); release(dxgi);
     if(FAILED(hr)) discard_device_resources();
-    trace_event("create-hr",hr,dpi_);
     return SUCCEEDED(hr);
 }
 void Renderer::resize(UINT width,UINT height,UINT dpi) noexcept {
@@ -103,7 +107,6 @@ void Renderer::resize(UINT width,UINT height,UINT dpi) noexcept {
 bool Renderer::wait_for_first_frame() noexcept {
     if(!composition_) return false;
     const HRESULT hr=composition_->WaitForCommitCompletion();
-    trace_event("first-frame-ready",hr);
     return SUCCEEDED(hr);
 }
 bool Renderer::wait_for_animation_frame() noexcept {
@@ -112,7 +115,6 @@ bool Renderer::wait_for_animation_frame() noexcept {
     return animation_output_ && SUCCEEDED(animation_output_->WaitForVBlank());
 }
 void Renderer::discard_device_resources() noexcept {
-    trace_event("discard",target_!=nullptr);
     for(auto& icon:icons_) release(icon);
     if(composition_target_) composition_target_->SetRoot(nullptr);
     if(composition_) composition_->Commit();
@@ -216,7 +218,6 @@ bool Renderer::draw(const RenderState& s) noexcept {
     HRESULT hr=target_->EndDraw();
     if(SUCCEEDED(hr)) hr=swap_->Present(1,0);
     if(SUCCEEDED(hr)) hr=composition_->Commit();
-    trace_event("present-hr",hr,s.acrylic);
     if(FAILED(hr)) discard_device_resources();
     return SUCCEEDED(hr);
 }
