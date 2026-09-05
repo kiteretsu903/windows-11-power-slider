@@ -2,7 +2,7 @@
 #define AppVersion "1.0.3"
 #define AppPublisher "Bozhen Peng"
 #define AppExeName "PowerModeNative.exe"
-#define AppIconName "PowerSlider-glass-dial-1.ico"
+#define AppIconName "PowerSlider-glass-dial-3.ico"
 
 [Setup]
 AppId={{C6092D9F-9F26-4F4D-A882-D44D82E8C8D0}

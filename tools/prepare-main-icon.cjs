@@ -45,8 +45,18 @@ const root = path.resolve(__dirname, '..');
     .extract({left, top, width: right - left + 1, height: bottom - top + 1})
     .resize(960, 960, {fit: 'contain', background: '#00000000', kernel: 'lanczos3'})
     .png().toBuffer();
-  await sharp({create: {width: 1024, height: 1024, channels: 4, background: '#00000000'}})
+  const original = await sharp({create: {width: 1024, height: 1024, channels: 4, background: '#00000000'}})
     .composite([{input: tile, left: 32, top: 32}])
+    .png().toBuffer();
+  // Crop the approved original dial, without generating or repainting its
+  // reflections, sectors or needle. Only the outer alpha boundary changes.
+  const diameter = 816;
+  const circle = Buffer.from(`<svg width="${diameter}" height="${diameter}" xmlns="http://www.w3.org/2000/svg"><circle cx="408" cy="408" r="405" fill="white"/></svg>`);
+  const dial = await sharp(original)
+    .extract({left: 104, top: 110, width: diameter, height: diameter})
+    .composite([{input: circle, blend: 'dest-in'}]).png().toBuffer();
+  await sharp(dial)
+    .extend({top: 32, bottom: 32, left: 32, right: 32, background: '#00000000'})
     .png().toFile(path.join(root, 'assets/app-icon.png'));
-  console.log(`Exported 1024px RGBA app icon; removed ${tail} exterior pixels.`);
+  console.log(`Exported 880px transparent circular crop of the original dial; removed ${tail} exterior source pixels.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

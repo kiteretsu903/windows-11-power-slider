@@ -22,33 +22,9 @@ foreach($name in 'power','battery','coffee') {
     $out.Save((Join-Path $root "assets\$name-ui.png"),[Drawing.Imaging.ImageFormat]::Png)
     $out.Dispose()
 }
-# The product icon is independent from the plugged-in card artwork.
-# Do not regenerate the launcher/installer icon from power-ui.png.
-$source=[Drawing.Bitmap]::new((Join-Path $root 'assets\app-icon.png'))
-$images=[Collections.Generic.List[byte[]]]::new()
-$sizes=@(16,20,24,32,40,48,64,128,256)
-foreach($size in $sizes) {
-    $b=[Drawing.Bitmap]::new($size,$size,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g=[Drawing.Graphics]::FromImage($b);$g.InterpolationMode=[Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.CompositingMode=[Drawing.Drawing2D.CompositingMode]::SourceCopy
-    $g.PixelOffsetMode=[Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $g.DrawImage($source,0,0,$size,$size);$g.Dispose()
-    $s=[IO.MemoryStream]::new();$b.Save($s,[Drawing.Imaging.ImageFormat]::Png)
-    $images.Add($s.ToArray());$s.Dispose();$b.Dispose()
+# The approved product artwork is independent from the card illustrations.
+# Its prebuilt, DPI-complete ICO is committed so normal builds need no Node.js.
+# When changing that artwork, regenerate it with tools/export-main-icon.cjs.
+if(-not (Test-Path -LiteralPath (Join-Path $root 'src\PowerModeNative.ico'))) {
+    throw 'Missing application ICO. Run node tools/export-main-icon.cjs (requires sharp).'
 }
-# Keep the website and README logo in sync with the 256px ICO frame.
-[IO.File]::WriteAllBytes((Join-Path $root 'site\assets\icon.png'),$images[$images.Count-1])
-[IO.File]::WriteAllBytes((Join-Path $root 'docs\images\app-icon.png'),$images[$images.Count-1])
-$source.Dispose()
-$w=[IO.BinaryWriter]::new([IO.File]::Create((Join-Path $root 'src\PowerModeNative.ico')))
-try {
-    $w.Write([uint16]0);$w.Write([uint16]1);$w.Write([uint16]$sizes.Count)
-    $offset=6+16*$sizes.Count
-    for($i=0;$i -lt $sizes.Count;$i++) {
-        $dimension=if($sizes[$i] -eq 256){0}else{$sizes[$i]}
-        $w.Write([byte]$dimension);$w.Write([byte]$dimension);$w.Write([byte]0);$w.Write([byte]0)
-        $w.Write([uint16]1);$w.Write([uint16]32);$w.Write([uint32]$images[$i].Length);$w.Write([uint32]$offset)
-        $offset+=$images[$i].Length
-    }
-    foreach($bytes in $images){$w.Write($bytes)}
-} finally {$w.Dispose()}
